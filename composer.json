@@ -1,0 +1,33 @@
+{
+    "name": "slim/http-cache",
+    "type": "library",
+    "description": "Slim Framework HTTP cache middleware and service provider",
+    "keywords": ["slim","framework","middleware","cache"],
+    "homepage": "http://slimframework.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Josh Lockhart",
+            "email": "hello@joshlockhart.com",
+            "homepage": "http://joshlockhart.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "pimple/pimple": "~3.0",
+        "psr/http-message": "~0.9"
+    },
+    "require-dev": {
+        "slim/slim": "dev-develop"
+    },
+    "autoload": {
+        "psr-4": {
+            "Slim\\HttpCache\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Slim\\HttpCache\\Tests\\": "tests"
+        }
+    }
+}
