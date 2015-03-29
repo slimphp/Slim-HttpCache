@@ -1,5 +1,7 @@
 # Slim Framework HTTP Cache
 
+[![Build Status](https://travis-ci.org/slimphp/Slim-HttpCache.svg?branch=master)](https://travis-ci.org/slimphp/Slim-HttpCache)
+
 This repository contains a Slim Framework HTTP cache middleware and service provider.
 
 ## Install
