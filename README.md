@@ -9,7 +9,7 @@ This repository contains a Slim Framework HTTP cache middleware and service prov
 Via Composer
 
 ``` bash
-$ composer require slim/httpcache
+$ composer require slim/http-cache
 ```
 
 Requires Slim 3.0.0 or newer.
