@@ -6,6 +6,22 @@ use Slim\Http\Response;
 
 class CacheProviderTest extends \PHPUnit_Framework_TestCase
 {
+    public function testAllowCache()
+    {
+        $cacheProvider = new CacheProvider();
+        $res = $cacheProvider->allowCache(new Response(), 'private', 43200);
+
+        $this->assertEquals('private, max-age=43200', $res->getHeader('Cache-Control'));
+    }
+
+    public function testDenyCache()
+    {
+        $cacheProvider = new CacheProvider();
+        $res = $cacheProvider->denyCache(new Response());
+
+        $this->assertEquals('no-store,no-cache', $res->getHeader('Cache-Control'));
+    }
+
     public function testWithExpires()
     {
         $now = time();

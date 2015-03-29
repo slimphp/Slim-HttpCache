@@ -48,11 +48,13 @@ class Cache
         $response = $next($request, $response);
 
         // Cache-Control header
-        $response = $response->withHeader('Cache-Control', sprintf(
-            '%s, max-age=%s',
-            $this->type,
-            $this->maxAge
-        ));
+        if (!$response->hasHeader('Cache-Control')) {
+            $response = $response->withHeader('Cache-Control', sprintf(
+                '%s, max-age=%s',
+                $this->type,
+                $this->maxAge
+            ));
+        }
 
         // Last-Modified header and conditional GET check
         $lastModified = $response->getHeader('Last-Modified');

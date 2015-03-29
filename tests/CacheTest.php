@@ -35,6 +35,19 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('public, max-age=86400', $res->getHeader('Cache-Control'));
     }
 
+    public function testCacheControlHeaderDoesNotOverrideExistingHeader()
+    {
+        $cache = new Cache('public', 86400);
+        $req = $this->requestFactory();
+        $res = new Response();
+        $next = function (Request $req, Response $res) {
+            return $res->withHeader('Cache-Control', 'no-cache,no-store');
+        };
+        $res = $cache($req, $res, $next);
+
+        $this->assertEquals('no-cache,no-store', $res->getHeader('Cache-Control'));
+    }
+
     public function testLastModifiedWithCacheHit()
     {
         $now = time();

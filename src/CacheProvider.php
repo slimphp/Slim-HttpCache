@@ -18,6 +18,43 @@ class CacheProvider implements ServiceProviderInterface
     }
 
     /**
+     * Enable client-side HTTP caching
+     *
+     * @param  ResponseInterface $response PSR7 response object
+     * @param  string            $type     Cache-Control type: "private" or "public"
+     * @param  null|int|string   $maxAge   Maximum cache age (integer timestamp or datetime string)
+     *
+     * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
+     */
+    public function allowCache(ResponseInterface $response, $type = 'private', $maxAge = null)
+    {
+        if (!in_array($type, ['private', 'public'])) {
+            throw new \InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
+        }
+        $headerValue = $type;
+        if ($maxAge) {
+            if (!is_integer($maxAge)) {
+                $maxAge = strtotime($maxAge);
+            }
+            $headerValue = $headerValue . ', max-age=' . $maxAge;
+        }
+
+        return $response->withHeader('Cache-Control', $headerValue);
+    }
+
+    /**
+     * Disable client-side HTTP caching
+     *
+     * @param  ResponseInterface $response PSR7 response object
+     *
+     * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
+     */
+    public function denyCache(ResponseInterface $response)
+    {
+        return $response->withHeader('Cache-Control', 'no-store,no-cache');
+    }
+
+    /**
      * Add `Expires` header to PSR7 response object
      *
      * @param  ResponseInterface $response A PSR7 response object
