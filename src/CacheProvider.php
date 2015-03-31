@@ -60,7 +60,7 @@ class CacheProvider implements ServiceProviderInterface
      * @param  ResponseInterface $response A PSR7 response object
      * @param  int|string        $time     A UNIX timestamp or a valid `strtotime()` string
      *
-     * @return ResponseInterface A new PSR7 response object with `Expires` header
+     * @return ResponseInterface           A new PSR7 response object with `Expires` header
      */
     public function withExpires(ResponseInterface $response, $time)
     {
