@@ -63,7 +63,7 @@ class Cache
                 $lastModified = strtotime($lastModified);
             }
             $ifModifiedSince = $request->getHeader('If-Modified-Since');
-            if ($ifModifiedSince && $lastModified === strtotime($ifModifiedSince)) {
+            if ($ifModifiedSince && $lastModified <= strtotime($ifModifiedSince)) {
                 return $response->withStatus(304);
             }
         }
