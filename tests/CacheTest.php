@@ -64,6 +64,38 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(304, $res->getStatusCode());
     }
 
+    public function testLastModifiedWithCacheHitAndNewerDate()
+    {
+        $now = time();
+        $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
+        $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 172800); // <-- Newer date
+        $cache = new Cache('public', 86400);
+        $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
+        $res = new Response();
+        $next = function (Request $req, Response $res) use ($lastModified) {
+            return $res->withHeader('Last-Modified', $lastModified);
+        };
+        $res = $cache($req, $res, $next);
+
+        $this->assertEquals(304, $res->getStatusCode());
+    }
+
+    public function testLastModifiedWithCacheHitAndOlderDate()
+    {
+        $now = time();
+        $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
+        $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now); // <-- Older date
+        $cache = new Cache('public', 86400);
+        $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
+        $res = new Response();
+        $next = function (Request $req, Response $res) use ($lastModified) {
+            return $res->withHeader('Last-Modified', $lastModified);
+        };
+        $res = $cache($req, $res, $next);
+
+        $this->assertEquals(200, $res->getStatusCode());
+    }
+
     public function testLastModifiedWithCacheMiss()
     {
         $now = time();
