@@ -58,11 +58,16 @@ class Cache
 
         // Last-Modified header and conditional GET check
         $lastModified = $response->getHeader('Last-Modified');
+        $lastModified = reset($lastModified);
+
         if ($lastModified) {
             if (!is_integer($lastModified)) {
                 $lastModified = strtotime($lastModified);
             }
+
             $ifModifiedSince = $request->getHeader('If-Modified-Since');
+            $ifModifiedSince = reset($ifModifiedSince);
+
             if ($ifModifiedSince && $lastModified <= strtotime($ifModifiedSince)) {
                 return $response->withStatus(304);
             }
@@ -70,8 +75,12 @@ class Cache
 
         // ETag header and conditional GET check
         $etag = $response->getHeader('ETag');
+        $etag = reset($etag);
+
         if ($etag) {
             $ifNoneMatch = $request->getHeader('If-None-Match');
+            $ifNoneMatch = reset($ifNoneMatch);
+
             if ($ifNoneMatch) {
                 $etagList = preg_split('@\s*,\s*@', $ifNoneMatch);
                 if (in_array($etag, $etagList) || in_array('*', $etagList)) {
