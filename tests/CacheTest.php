@@ -32,8 +32,7 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         };
         $res = $cache($req, $res, $next);
 
-        $cacheControl = $res->getHeader('Cache-Control');
-        $cacheControl = reset($cacheControl);
+        $cacheControl = $res->getHeaderLine('Cache-Control');
 
         $this->assertEquals('public, max-age=86400', $cacheControl);
     }
@@ -48,8 +47,7 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         };
         $res = $cache($req, $res, $next);
 
-        $cacheControl = $res->getHeader('Cache-Control');
-        $cacheControl = reset($cacheControl);
+        $cacheControl = $res->getHeaderLine('Cache-Control');
 
         $this->assertEquals('no-cache,no-store', $cacheControl);
     }

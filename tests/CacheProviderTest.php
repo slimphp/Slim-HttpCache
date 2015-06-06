@@ -11,8 +11,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $cacheProvider = new CacheProvider();
         $res = $cacheProvider->allowCache(new Response(), 'private', 43200);
 
-        $cacheControl = $res->getHeader('Cache-Control');
-        $cacheControl = reset($cacheControl);
+        $cacheControl = $res->getHeaderLine('Cache-Control');
 
         $this->assertEquals('private, max-age=43200', $cacheControl);
     }
@@ -22,8 +21,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $cacheProvider = new CacheProvider();
         $res = $cacheProvider->denyCache(new Response());
 
-        $cacheControl = $res->getHeader('Cache-Control');
-        $cacheControl = reset($cacheControl);
+        $cacheControl = $res->getHeaderLine('Cache-Control');
 
         $this->assertEquals('no-store,no-cache', $cacheControl);
     }
@@ -34,8 +32,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $cacheProvider = new CacheProvider();
         $res = $cacheProvider->withExpires(new Response(), $now);
 
-        $expires = $res->getHeader('Expires');
-        $expires = reset($expires);
+        $expires = $res->getHeaderLine('Expires');
 
         $this->assertEquals(gmdate('D, d M Y H:i:s T', $now), $expires);
     }
@@ -46,8 +43,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $cacheProvider = new CacheProvider();
         $res = $cacheProvider->withEtag(new Response(), $etag);
 
-        $etagHeader = $res->getHeader('ETag');
-        $etagHeader = reset($etagHeader);
+        $etagHeader = $res->getHeaderLine('ETag');
 
         $this->assertEquals('"' . $etag . '"', $etagHeader);
     }
@@ -58,8 +54,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $cacheProvider = new CacheProvider();
         $res = $cacheProvider->withEtag(new Response(), $etag, 'weak');
 
-        $etagHeader = $res->getHeader('ETag');
-        $etagHeader = reset($etagHeader);
+        $etagHeader = $res->getHeaderLine('ETag');
 
         $this->assertEquals('W/"' . $etag . '"', $etagHeader);
     }
@@ -80,8 +75,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $cacheProvider = new CacheProvider();
         $res = $cacheProvider->withLastModified(new Response(), $now);
 
-        $lastModified = $res->getHeader('Last-Modified');
-        $lastModified = reset($lastModified);
+        $lastModified = $res->getHeaderLine('Last-Modified');
 
         $this->assertEquals(gmdate('D, d M Y H:i:s T', $now), $lastModified);
     }
