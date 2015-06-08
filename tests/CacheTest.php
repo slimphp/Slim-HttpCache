@@ -7,7 +7,7 @@ use Slim\Http\Response;
 use Slim\Http\Uri;
 use Slim\Http\Headers;
 use Slim\Http\Body;
-use Slim\Collection;
+use Slim\Http\Collection;
 
 class CacheTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,8 +15,8 @@ class CacheTest extends \PHPUnit_Framework_TestCase
     {
         $uri = Uri::createFromString('https://example.com:443/foo/bar?abc=123');
         $headers = new Headers();
-        $cookies = new Collection();
-        $serverParams = new Collection();
+        $cookies = [];
+        $serverParams = [];
         $body = new Body(fopen('php://temp', 'r+'));
 
         return new Request('GET', $uri, $headers, $cookies, $serverParams, $body);
@@ -32,7 +32,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         };
         $res = $cache($req, $res, $next);
 
-        $this->assertEquals('public, max-age=86400', $res->getHeader('Cache-Control'));
+        $cacheControl = $res->getHeaderLine('Cache-Control');
+
+        $this->assertEquals('public, max-age=86400', $cacheControl);
     }
 
     public function testCacheControlHeaderDoesNotOverrideExistingHeader()
@@ -45,7 +47,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         };
         $res = $cache($req, $res, $next);
 
-        $this->assertEquals('no-cache,no-store', $res->getHeader('Cache-Control'));
+        $cacheControl = $res->getHeaderLine('Cache-Control');
+
+        $this->assertEquals('no-cache,no-store', $cacheControl);
     }
 
     public function testLastModifiedWithCacheHit()

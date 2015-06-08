@@ -1,6 +1,7 @@
 <?php
 namespace Slim\HttpCache;
 
+use InvalidArgumentException;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -25,11 +26,12 @@ class CacheProvider implements ServiceProviderInterface
      * @param  null|int|string   $maxAge   Maximum cache age (integer timestamp or datetime string)
      *
      * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
+     * @throws InvalidArgumentException if the cache-control type is invalid
      */
     public function allowCache(ResponseInterface $response, $type = 'private', $maxAge = null)
     {
         if (!in_array($type, ['private', 'public'])) {
-            throw new \InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
+            throw new InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
         }
         $headerValue = $type;
         if ($maxAge) {
@@ -61,13 +63,14 @@ class CacheProvider implements ServiceProviderInterface
      * @param  int|string        $time     A UNIX timestamp or a valid `strtotime()` string
      *
      * @return ResponseInterface           A new PSR7 response object with `Expires` header
+     * @throws InvalidArgumentException if the expiration date cannot be parsed
      */
     public function withExpires(ResponseInterface $response, $time)
     {
         if (!is_integer($time)) {
             $time = strtotime($time);
             if ($time === false) {
-                throw new \InvalidArgumentException('Expiration value could not be parsed with `strtotime()`.');
+                throw new InvalidArgumentException('Expiration value could not be parsed with `strtotime()`.');
             }
         }
 
@@ -82,11 +85,12 @@ class CacheProvider implements ServiceProviderInterface
      * @param  string            $type     ETag type: "strong" or "weak"
      *
      * @return ResponseInterface           A new PSR7 response object with `ETag` header
+     * @throws InvalidArgumentException if the etag type is invalid
      */
     public function withEtag(ResponseInterface $response, $value, $type = 'strong')
     {
         if (!in_array($type, ['strong', 'weak'])) {
-            throw new \InvalidArgumentException('Invalid etag type. Must be "strong" or "weak".');
+            throw new InvalidArgumentException('Invalid etag type. Must be "strong" or "weak".');
         }
         $value = '"' . $value . '"';
         if ($type === 'weak') {
@@ -103,13 +107,14 @@ class CacheProvider implements ServiceProviderInterface
      * @param  int|string        $time     A UNIX timestamp or a valid `strtotime()` string
      *
      * @return ResponseInterface           A new PSR7 response object with `Last-Modified` header
+     * @throws InvalidArgumentException if the last modified date cannot be parsed
      */
     public function withLastModified(ResponseInterface $response, $time)
     {
         if (!is_integer($time)) {
             $time = strtotime($time);
             if ($time === false) {
-                throw new \InvalidArgumentException('Last Modified value could not be parsed with `strtotime()`.');
+                throw new InvalidArgumentException('Last Modified value could not be parsed with `strtotime()`.');
             }
         }
 
