@@ -22,8 +22,11 @@ $app = new \Slim\App();
 // Register middleware
 $app->add(new \Slim\HttpCache\Cache('public', 86400));
 
+// Fetch DI Container
+$container = $app->getContainer();
+
 // Register service provider
-$app->register(new \Slim\HttpCache\CacheProvider);
+$container->register(new \Slim\HttpCache\CacheProvider);
 
 // Example route with ETag header
 $app->get('/foo', function ($req, $res, $args) {
