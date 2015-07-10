@@ -21,14 +21,15 @@ class CacheProvider implements ServiceProviderInterface
     /**
      * Enable client-side HTTP caching
      *
-     * @param  ResponseInterface $response PSR7 response object
-     * @param  string            $type     Cache-Control type: "private" or "public"
-     * @param  null|int|string   $maxAge   Maximum cache age (integer timestamp or datetime string)
+     * @param  ResponseInterface $response       PSR7 response object
+     * @param  string            $type           Cache-Control type: "private" or "public"
+     * @param  null|int|string   $maxAge         Maximum cache age (integer timestamp or datetime string)
+     * @param  bool              $mustRevalidate add option "must-revalidate" to Cache-Control
      *
      * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
      * @throws InvalidArgumentException if the cache-control type is invalid
      */
-    public function allowCache(ResponseInterface $response, $type = 'private', $maxAge = null)
+    public function allowCache(ResponseInterface $response, $type = 'private', $maxAge = null, $mustRevalidate = false)
     {
         if (!in_array($type, ['private', 'public'])) {
             throw new InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
@@ -39,6 +40,10 @@ class CacheProvider implements ServiceProviderInterface
                 $maxAge = strtotime($maxAge);
             }
             $headerValue = $headerValue . ', max-age=' . $maxAge;
+        }
+
+        if ($mustRevalidate) {
+            $headerValue = $headerValue . ", must-revalidate";
         }
 
         return $response->withHeader('Cache-Control', $headerValue);

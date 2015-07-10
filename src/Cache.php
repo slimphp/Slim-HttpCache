@@ -23,15 +23,24 @@ class Cache
     protected $maxAge;
 
     /**
+     * Cache-Control includes must-revalidate flag
+     *
+     * @var bool
+     */
+    protected $mustRevalidate;
+
+    /**
      * Create new HTTP cache
      *
-     * @param string $type   The cache type: "public" or "private"
-     * @param int    $maxAge The maximum age of client-side cache
+     * @param string $type           The cache type: "public" or "private"
+     * @param int    $maxAge         The maximum age of client-side cache
+     * @param bool   $mustRevalidate must-revalidate
      */
-    public function __construct($type = 'private', $maxAge = 86400)
+    public function __construct($type = 'private', $maxAge = 86400, $mustRevalidate = false)
     {
         $this->type = $type;
         $this->maxAge = $maxAge;
+        $this->mustRevalidate = $mustRevalidate;
     }
 
     /**
@@ -50,9 +59,10 @@ class Cache
         // Cache-Control header
         if (!$response->hasHeader('Cache-Control')) {
             $response = $response->withHeader('Cache-Control', sprintf(
-                '%s, max-age=%s',
+                '%s, max-age=%s%s',
                 $this->type,
-                $this->maxAge
+                $this->maxAge,
+                $this->mustRevalidate ? ', must-revalidate' : ''
             ));
         }
 
