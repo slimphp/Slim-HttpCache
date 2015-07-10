@@ -35,7 +35,7 @@ class CacheProvider implements ServiceProviderInterface
             throw new InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
         }
         $headerValue = $type;
-        if ($maxAge) {
+        if ($maxAge || is_integer($maxAge)) {
             if (!is_integer($maxAge)) {
                 $maxAge = strtotime($maxAge);
             }
