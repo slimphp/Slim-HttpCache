@@ -19,18 +19,25 @@ Requires Slim 3.0.0 or newer.
 ```php
 $app = new \Slim\App();
 
-// Register middleware
-$app->add(new \Slim\HttpCache\Cache('public', 86400));
+// Register middleware to automatically set default cache headers
+$app->add(new \Slim\Middleware\HttpCache\Cache('public', 86400));
 
 // Fetch DI Container
 $container = $app->getContainer();
 
-// Register service provider
-$container->register(new \Slim\HttpCache\CacheProvider);
+// Register service provider to get access to the cache methods
+$container->register(new \Slim\Middleware\HttpCache\CacheProvider);
 
 // Example route with ETag header
 $app->get('/foo', function ($req, $res, $args) {
-    $resWithEtag = $this['cache']->withEtag($res, 'abc');
+    $resWithEtag = $this->cache->withEtag($res, 'abc');
+
+    // Optional: Return early if the Etag matches the Etag in the request
+    if ($this->cache->isStillValid($req, $resWithEtag)) {
+        return $resWithEtag->withStatus(304);
+    }
+
+    $resWithEtag->getBody()->write('foo');
 
     return $resWithEtag;
 });

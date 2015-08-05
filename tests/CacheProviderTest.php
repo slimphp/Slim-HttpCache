@@ -1,82 +1,20 @@
 <?php
-namespace Slim\HttpCache\Tests;
+namespace Slim\Middleware\HttpCache\Tests;
 
-use Slim\HttpCache\CacheProvider;
-use Slim\Http\Response;
+use Pimple\Container;
+use Slim\Middleware\HttpCache\CacheProvider;
 
 class CacheProviderTest extends \PHPUnit_Framework_TestCase
 {
-    public function testAllowCache()
-    {
-        $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->allowCache(new Response(), 'private', 43200);
-
-        $cacheControl = $res->getHeaderLine('Cache-Control');
-
-        $this->assertEquals('private, max-age=43200', $cacheControl);
-    }
-
-    public function testDenyCache()
-    {
-        $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->denyCache(new Response());
-
-        $cacheControl = $res->getHeaderLine('Cache-Control');
-
-        $this->assertEquals('no-store,no-cache', $cacheControl);
-    }
-
-    public function testWithExpires()
-    {
-        $now = time();
-        $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withExpires(new Response(), $now);
-
-        $expires = $res->getHeaderLine('Expires');
-
-        $this->assertEquals(gmdate('D, d M Y H:i:s T', $now), $expires);
-    }
-
-    public function testWithETag()
-    {
-        $etag = 'abc';
-        $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withEtag(new Response(), $etag);
-
-        $etagHeader = $res->getHeaderLine('ETag');
-
-        $this->assertEquals('"' . $etag . '"', $etagHeader);
-    }
-
-    public function testWithETagWeak()
-    {
-        $etag = 'abc';
-        $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withEtag(new Response(), $etag, 'weak');
-
-        $etagHeader = $res->getHeaderLine('ETag');
-
-        $this->assertEquals('W/"' . $etag . '"', $etagHeader);
-    }
-
     /**
-     * @expectedException \InvalidArgumentException
+     * @covers Slim\Middleware\HttpCache\CacheProvider::register
      */
-    public function testWithETagInvalidType()
+    public function testRegister()
     {
-        $etag = 'abc';
-        $cacheProvider = new CacheProvider();
-        $cacheProvider->withEtag(new Response(), $etag, 'bork');
-    }
+        $container = new Container();
+        $container->register(new CacheProvider());
 
-    public function testWithLastModified()
-    {
-        $now = time();
-        $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withLastModified(new Response(), $now);
-
-        $lastModified = $res->getHeaderLine('Last-Modified');
-
-        $this->assertEquals(gmdate('D, d M Y H:i:s T', $now), $lastModified);
+        $this->assertTrue($container->offsetExists('cache'));
+        $this->assertInstanceOf('Slim\Middleware\HttpCache\CacheHelper', $container->offsetGet('cache'));
     }
 }

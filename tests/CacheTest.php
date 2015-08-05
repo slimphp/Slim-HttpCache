@@ -1,13 +1,12 @@
 <?php
-namespace Slim\HttpCache\Tests;
+namespace Slim\Middleware\HttpCache\Tests;
 
-use Slim\HttpCache\Cache;
+use Slim\Http\Body;
+use Slim\Http\Headers;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\Uri;
-use Slim\Http\Headers;
-use Slim\Http\Body;
-use Slim\Http\Collection;
+use Slim\Middleware\HttpCache\Cache;
 
 class CacheTest extends \PHPUnit_Framework_TestCase
 {
@@ -52,97 +51,36 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('no-cache,no-store', $cacheControl);
     }
 
-    public function testLastModifiedWithCacheHit()
+    public function testCacheControlHeaderIgnoresUnsafeMethods()
     {
-        $now = time();
-        $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
-        $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 86400);
         $cache = new Cache('public', 86400);
-        $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
+        $req = $this->requestFactory();
+        $req = $req->withMethod('POST');
+
         $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
+        $next = function (Request $req, Response $res) {
+            return $res;
         };
         $res = $cache($req, $res, $next);
 
-        $this->assertEquals(304, $res->getStatusCode());
+        $this->assertFalse($res->hasHeader('Cache-Control'));
     }
 
-    public function testLastModifiedWithCacheHitAndNewerDate()
+    public function testSetsStatusTo304IfCacheStillValid()
     {
-        $now = time();
-        $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
-        $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 172800); // <-- Newer date
-        $cache = new Cache('public', 86400);
-        $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
+        $cache = $this->getMock('Slim\Middleware\HttpCache\CacheHelper');
+        $cache->expects($this->once())->method('isStillValid')->will($this->returnValue(true));
+
+        $middleware = new Cache('public', 86400, $cache);
+        $req = $this->requestFactory();
+
         $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
+        $res = $res->withHeader('Cache-Control', 'public');
+        $next = function (Request $req, Response $res) {
+            return $res;
         };
-        $res = $cache($req, $res, $next);
+        $res = $middleware($req, $res, $next);
 
-        $this->assertEquals(304, $res->getStatusCode());
-    }
-
-    public function testLastModifiedWithCacheHitAndOlderDate()
-    {
-        $now = time();
-        $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
-        $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now); // <-- Older date
-        $cache = new Cache('public', 86400);
-        $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
-        };
-        $res = $cache($req, $res, $next);
-
-        $this->assertEquals(200, $res->getStatusCode());
-    }
-
-    public function testLastModifiedWithCacheMiss()
-    {
-        $now = time();
-        $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
-        $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now - 86400);
-        $cache = new Cache('public', 86400);
-        $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
-        };
-        $res = $cache($req, $res, $next);
-
-        $this->assertEquals(200, $res->getStatusCode());
-    }
-
-    public function testETagWithCacheHit()
-    {
-        $etag = 'abc';
-        $ifNoneMatch = 'abc';
-        $cache = new Cache('public', 86400);
-        $req = $this->requestFactory()->withHeader('If-None-Match', $ifNoneMatch);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($etag) {
-            return $res->withHeader('ETag', $etag);
-        };
-        $res = $cache($req, $res, $next);
-
-        $this->assertEquals(304, $res->getStatusCode());
-    }
-
-    public function testETagWithCacheMiss()
-    {
-        $etag = 'abc';
-        $ifNoneMatch = 'xyz';
-        $cache = new Cache('public', 86400);
-        $req = $this->requestFactory()->withHeader('If-None-Match', $ifNoneMatch);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($etag) {
-            return $res->withHeader('ETag', $etag);
-        };
-        $res = $cache($req, $res, $next);
-
-        $this->assertEquals(200, $res->getStatusCode());
+        $this->assertSame(304, $res->getStatusCode());
     }
 }
