@@ -2,22 +2,10 @@
 namespace Slim\HttpCache;
 
 use InvalidArgumentException;
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
 use Psr\Http\Message\ResponseInterface;
 
-class CacheProvider implements ServiceProviderInterface
+class CacheProvider
 {
-    /**
-     * Register this cache provider with a Pimple container
-     *
-     * @param  Container $container
-     */
-    public function register(Container $container)
-    {
-        $container['cache'] = $this;
-    }
-
     /**
      * Enable client-side HTTP caching
      *

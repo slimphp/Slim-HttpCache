@@ -26,11 +26,13 @@ $app->add(new \Slim\HttpCache\Cache('public', 86400));
 $container = $app->getContainer();
 
 // Register service provider
-$container->register(new \Slim\HttpCache\CacheProvider);
+$container['cache'] = function () {
+    return new \Slim\HttpCache\CacheProvider();
+};
 
 // Example route with ETag header
 $app->get('/foo', function ($req, $res, $args) {
-    $resWithEtag = $this['cache']->withEtag($res, 'abc');
+    $resWithEtag = $this->cache->withEtag($res, 'abc');
 
     return $resWithEtag;
 });
