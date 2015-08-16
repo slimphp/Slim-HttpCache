@@ -1,8 +1,6 @@
 <?php
 namespace Slim\HttpCache;
 
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
