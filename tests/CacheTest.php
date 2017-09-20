@@ -52,6 +52,21 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('private, max-age=86400, must-revalidate', $cacheControl);
     }
 
+    public function testCacheControlHeaderWithZeroMaxAge()
+    {
+        $cache = new Cache('private', 0, false);
+        $req = $this->requestFactory();
+        $res = new Response();
+        $next = function (Request $req, Response $res) {
+            return $res;
+        };
+        $res = $cache($req, $res, $next);
+
+        $cacheControl = $res->getHeaderLine('Cache-Control');
+
+        $this->assertEquals('private, no-cache', $cacheControl);
+    }
+
     public function testCacheControlHeaderDoesNotOverrideExistingHeader()
     {
         $cache = new Cache('public', 86400);

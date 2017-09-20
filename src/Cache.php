@@ -56,12 +56,20 @@ class Cache
 
         // Cache-Control header
         if (!$response->hasHeader('Cache-Control')) {
-            $response = $response->withHeader('Cache-Control', sprintf(
-                '%s, max-age=%s%s',
-                $this->type,
-                $this->maxAge,
-                $this->mustRevalidate ? ', must-revalidate' : ''
-            ));
+            if ($this->maxAge === 0) {
+                $response = $response->withHeader('Cache-Control', sprintf(
+                    '%s, no-cache%s',
+                    $this->type,
+                    $this->mustRevalidate ? ', must-revalidate' : ''
+                ));
+            } else {
+                $response = $response->withHeader('Cache-Control', sprintf(
+                    '%s, max-age=%s%s',
+                    $this->type,
+                    $this->maxAge,
+                    $this->mustRevalidate ? ', must-revalidate' : ''
+                ));
+            }
         }
 
         // Last-Modified header and conditional GET check
