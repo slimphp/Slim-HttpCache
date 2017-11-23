@@ -22,9 +22,11 @@ class CacheProvider
         if (!in_array($type, ['private', 'public'])) {
             throw new InvalidArgumentException('Invalid Cache-Control type. Must be "public" or "private".');
         }
+
         $headerValue = $type;
-        if ($maxAge || is_integer($maxAge)) {
-            if (!is_integer($maxAge)) {
+        $maxAgeType = gettype($maxAge);
+        if ($maxAge || $maxAgeType == 'integer') {
+            if ($maxAgeType != 'integer') {
                 $maxAge = strtotime($maxAge);
             }
             $headerValue = $headerValue . ', max-age=' . $maxAge;
