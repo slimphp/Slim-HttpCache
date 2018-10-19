@@ -25,7 +25,7 @@ class CacheProvider
         $headerValue = $type;
         if ($maxAge || is_integer($maxAge)) {
             if (!is_integer($maxAge)) {
-                $maxAge = strtotime($maxAge);
+                $maxAge = strtotime($maxAge) - time();
             }
             $headerValue = $headerValue . ', max-age=' . $maxAge;
         }
