@@ -72,21 +72,6 @@ class Cache
             }
         }
 
-        // Last-Modified header and conditional GET check
-        $lastModified = $response->getHeaderLine('Last-Modified');
-
-        if ($lastModified) {
-            if (!is_integer($lastModified)) {
-                $lastModified = strtotime($lastModified);
-            }
-
-            $ifModifiedSince = $request->getHeaderLine('If-Modified-Since');
-
-            if ($ifModifiedSince && $lastModified <= strtotime($ifModifiedSince)) {
-                return $response->withStatus(304);
-            }
-        }
-
         // ETag header and conditional GET check
         $etag = $response->getHeader('ETag');
         $etag = reset($etag);
@@ -99,6 +84,22 @@ class Cache
                 if (in_array($etag, $etagList) || in_array('*', $etagList)) {
                     return $response->withStatus(304);
                 }
+            }
+        }
+
+
+        // Last-Modified header and conditional GET check
+        $lastModified = $response->getHeaderLine('Last-Modified');
+
+        if ($lastModified) {
+            if (!is_integer($lastModified)) {
+                $lastModified = strtotime($lastModified);
+            }
+
+            $ifModifiedSince = $request->getHeaderLine('If-Modified-Since');
+
+            if ($ifModifiedSince && $lastModified <= strtotime($ifModifiedSince)) {
+                return $response->withStatus(304);
             }
         }
 
