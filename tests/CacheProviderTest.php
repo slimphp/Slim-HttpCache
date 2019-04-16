@@ -16,6 +16,16 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('private, max-age=43200', $cacheControl);
     }
 
+    public function testAllowCacheWithRelativeMaxAge()
+    {
+        $cacheProvider = new CacheProvider();
+        $res = $cacheProvider->allowCache(new Response(), 'private', '+12 hours');
+
+        $cacheControl = $res->getHeaderLine('Cache-Control');
+
+        $this->assertEquals('private, max-age=43200', $cacheControl);
+    }
+
     public function testAllowCacheWithMustRevalidate()
     {
         $cacheProvider = new CacheProvider();
