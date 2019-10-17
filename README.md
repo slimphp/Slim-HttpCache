@@ -4,6 +4,10 @@
 
 This repository contains a Slim Framework HTTP cache middleware and service provider.
 
+## Requirements
+
+- PHP 7.1 or newer
+
 ## Install
 
 Via Composer
@@ -12,12 +16,15 @@ Via Composer
 $ composer require slim/http-cache
 ```
 
-Requires Slim 3.0.0 or newer.
-
 ## Usage
 
 ```php
-$app = new \Slim\App();
+// Create Container using PHP-DI
+$container = new Container();
+
+// Set container to create App with on AppFactory
+AppFactory::setContainer($container);
+$app = AppFactory::create();
 
 // Register middleware
 $app->add(new \Slim\HttpCache\Cache('public', 86400));
@@ -26,9 +33,9 @@ $app->add(new \Slim\HttpCache\Cache('public', 86400));
 $container = $app->getContainer();
 
 // Register service provider
-$container['cache'] = function () {
+$container->set('cache', function () {
     return new \Slim\HttpCache\CacheProvider();
-};
+});
 
 // Example route with ETag header
 $app->get('/foo', function ($req, $res, $args) {
@@ -43,7 +50,7 @@ $app->run();
 ## Testing
 
 ``` bash
-$ phpunit
+$ vendor/bin/phpunit
 ```
 
 ## Contributing
