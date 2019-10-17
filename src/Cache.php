@@ -1,10 +1,12 @@
 <?php
 namespace Slim\HttpCache;
 
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class Cache
+class Cache implements MiddlewareInterface
 {
     /**
      * Cache-Control type (public or private)
@@ -42,17 +44,11 @@ class Cache
     }
 
     /**
-     * Invoke cache middleware
-     *
-     * @param  RequestInterface  $request  A PSR7 request object
-     * @param  ResponseInterface $response A PSR7 response object
-     * @param  callable          $next     The next middleware callable
-     *
-     * @return ResponseInterface           A PSR7 response object
+     * {@inheritDoc}
      */
-    public function __invoke(RequestInterface $request, ResponseInterface $response, callable $next)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $next($request, $response);
+        $response = $handler->handle($request);
 
         // Cache-Control header
         if (!$response->hasHeader('Cache-Control')) {

@@ -1,15 +1,22 @@
 <?php
 namespace Slim\HttpCache\Tests;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\HttpCache\CacheProvider;
-use Slim\Http\Response;
+use Slim\Psr7\Factory\ResponseFactory;
 
 class CacheProviderTest extends \PHPUnit_Framework_TestCase
 {
+    private function createResponse(): ResponseInterface
+    {
+        $responseFactory = new ResponseFactory();
+        return $responseFactory->createResponse();
+    }
+
     public function testAllowCache()
     {
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->allowCache(new Response(), 'private', 43200);
+        $res = $cacheProvider->allowCache($this->createResponse(), 'private', 43200);
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -19,7 +26,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
     public function testAllowCacheWithMustRevalidate()
     {
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->allowCache(new Response(), 'private', 43200, true);
+        $res = $cacheProvider->allowCache($this->createResponse(), 'private', 43200, true);
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -29,7 +36,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
     public function testDenyCache()
     {
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->denyCache(new Response());
+        $res = $cacheProvider->denyCache($this->createResponse());
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -40,7 +47,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
     {
         $now = time();
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withExpires(new Response(), $now);
+        $res = $cacheProvider->withExpires($this->createResponse(), $now);
 
         $expires = $res->getHeaderLine('Expires');
 
@@ -51,7 +58,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
     {
         $etag = 'abc';
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withEtag(new Response(), $etag);
+        $res = $cacheProvider->withEtag($this->createResponse(), $etag);
 
         $etagHeader = $res->getHeaderLine('ETag');
 
@@ -62,7 +69,7 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
     {
         $etag = 'abc';
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withEtag(new Response(), $etag, 'weak');
+        $res = $cacheProvider->withEtag($this->createResponse(), $etag, 'weak');
 
         $etagHeader = $res->getHeaderLine('ETag');
 
@@ -76,14 +83,14 @@ class CacheProviderTest extends \PHPUnit_Framework_TestCase
     {
         $etag = 'abc';
         $cacheProvider = new CacheProvider();
-        $cacheProvider->withEtag(new Response(), $etag, 'bork');
+        $cacheProvider->withEtag($this->createResponse(), $etag, 'bork');
     }
 
     public function testWithLastModified()
     {
         $now = time();
         $cacheProvider = new CacheProvider();
-        $res = $cacheProvider->withLastModified(new Response(), $now);
+        $res = $cacheProvider->withLastModified($this->createResponse(), $now);
 
         $lastModified = $res->getHeaderLine('Last-Modified');
 

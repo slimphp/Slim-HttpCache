@@ -1,36 +1,59 @@
 <?php
 namespace Slim\HttpCache\Tests;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Slim\HttpCache\Cache;
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Slim\Http\Uri;
-use Slim\Http\Headers;
-use Slim\Http\Body;
-use Slim\Http\Collection;
+use Slim\Psr7\Factory\ResponseFactory;
+use Slim\Psr7\Factory\ServerRequestFactory;
 
 class CacheTest extends \PHPUnit_Framework_TestCase
 {
-    public function requestFactory()
+    protected function requestFactory(): ServerRequestInterface
     {
-        $uri = Uri::createFromString('https://example.com:443/foo/bar?abc=123');
-        $headers = new Headers();
-        $cookies = [];
-        $serverParams = [];
-        $body = new Body(fopen('php://temp', 'r+'));
+        $serverRequestFactory = new ServerRequestFactory();
+        return $serverRequestFactory->createServerRequest('GET', 'https://example.com:443/foo/bar?abc=123');
+    }
 
-        return new Request('GET', $uri, $headers, $cookies, $serverParams, $body);
+    protected function createResponse(): ResponseInterface
+    {
+        $responseFactory = new ResponseFactory();
+        return $responseFactory->createResponse();
+    }
+
+    /**
+     * Create a request handler that simply assigns the $request that it receives to a public property
+     * of the returned response, so that we can then inspect that request.
+     *
+     * @param ResponseInterface|null $response
+     * @return RequestHandlerInterface
+     */
+    protected function createRequestHandler(ResponseInterface $response = null) : RequestHandlerInterface
+    {
+        $response = $response ?? $this->createResponse();
+        return new class($response) implements RequestHandlerInterface {
+            private $response;
+
+            public function __construct(ResponseInterface $response)
+            {
+                $this->response = $response;
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->response->request = $request;
+                return $this->response;
+            }
+        };
     }
 
     public function testCacheControlHeader()
     {
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory();
-        $res = new Response();
-        $next = function (Request $req, Response $res) {
-            return $res;
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $cache->process($req, $this->createRequestHandler());
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -41,11 +64,8 @@ class CacheTest extends \PHPUnit_Framework_TestCase
     {
         $cache = new Cache('private', 86400, true);
         $req = $this->requestFactory();
-        $res = new Response();
-        $next = function (Request $req, Response $res) {
-            return $res;
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $cache->process($req, $this->createRequestHandler());
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -56,11 +76,8 @@ class CacheTest extends \PHPUnit_Framework_TestCase
     {
         $cache = new Cache('private', 0, false);
         $req = $this->requestFactory();
-        $res = new Response();
-        $next = function (Request $req, Response $res) {
-            return $res;
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $cache->process($req, $this->createRequestHandler());
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -71,11 +88,10 @@ class CacheTest extends \PHPUnit_Framework_TestCase
     {
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory();
-        $res = new Response();
-        $next = function (Request $req, Response $res) {
-            return $res->withHeader('Cache-Control', 'no-cache,no-store');
-        };
-        $res = $cache($req, $res, $next);
+
+
+        $res = $this->createResponse()->withHeader('Cache-Control', 'no-cache,no-store');;
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -88,12 +104,11 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 86400);
         $cache = new Cache('public', 86400);
+
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(304, $res->getStatusCode());
     }
@@ -105,11 +120,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 172800); // <-- Newer date
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(304, $res->getStatusCode());
     }
@@ -121,11 +134,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now); // <-- Older date
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(200, $res->getStatusCode());
     }
@@ -137,11 +148,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now - 86400);
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($lastModified) {
-            return $res->withHeader('Last-Modified', $lastModified);
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(200, $res->getStatusCode());
     }
@@ -152,11 +161,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $ifNoneMatch = 'abc';
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory()->withHeader('If-None-Match', $ifNoneMatch);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($etag) {
-            return $res->withHeader('ETag', $etag);
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $this->createResponse()->withHeader('Etag', $etag);
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(304, $res->getStatusCode());
     }
@@ -167,11 +174,9 @@ class CacheTest extends \PHPUnit_Framework_TestCase
         $ifNoneMatch = 'xyz';
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory()->withHeader('If-None-Match', $ifNoneMatch);
-        $res = new Response();
-        $next = function (Request $req, Response $res) use ($etag) {
-            return $res->withHeader('ETag', $etag);
-        };
-        $res = $cache($req, $res, $next);
+
+        $res = $this->createResponse()->withHeader('Etag', $etag);
+        $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(200, $res->getStatusCode());
     }
