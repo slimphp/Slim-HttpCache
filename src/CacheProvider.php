@@ -61,7 +61,7 @@ class CacheProvider
      *
      * @return ResponseInterface           A new PSR7 response object with `Cache-Control` header
      */
-    public function denyCache(ResponseInterface $response)
+    public function denyCache(ResponseInterface $response): ResponseInterface
     {
         return $response->withHeader('Cache-Control', 'no-store,no-cache');
     }
@@ -75,7 +75,7 @@ class CacheProvider
      * @return ResponseInterface           A new PSR7 response object with `Expires` header
      * @throws InvalidArgumentException if the expiration date cannot be parsed
      */
-    public function withExpires(ResponseInterface $response, $time)
+    public function withExpires(ResponseInterface $response, $time): ResponseInterface
     {
         if (!is_integer($time)) {
             $time = strtotime($time);
@@ -97,7 +97,7 @@ class CacheProvider
      * @return ResponseInterface           A new PSR7 response object with `ETag` header
      * @throws InvalidArgumentException if the etag type is invalid
      */
-    public function withEtag(ResponseInterface $response, $value, $type = 'strong')
+    public function withEtag(ResponseInterface $response, string $value, string $type = 'strong'): ResponseInterface
     {
         if (!in_array($type, ['strong', 'weak'])) {
             throw new InvalidArgumentException('Invalid etag type. Must be "strong" or "weak".');
@@ -119,7 +119,7 @@ class CacheProvider
      * @return ResponseInterface           A new PSR7 response object with `Last-Modified` header
      * @throws InvalidArgumentException if the last modified date cannot be parsed
      */
-    public function withLastModified(ResponseInterface $response, $time)
+    public function withLastModified(ResponseInterface $response, $time): ResponseInterface
     {
         if (!is_integer($time)) {
             $time = strtotime($time);
