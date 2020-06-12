@@ -56,8 +56,6 @@ class CacheTest extends TestCase
 
             public function handle(ServerRequestInterface $request): ResponseInterface
             {
-                $this->response->request = $request;
-
                 return $this->response;
             }
         };
