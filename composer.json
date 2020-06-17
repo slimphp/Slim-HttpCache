@@ -40,12 +40,12 @@
   },
   "scripts": {
     "test": [
-      "@phpunit",
       "@phpcs",
-      "@phpstan"
+      "@phpstan",
+      "@phpunit"
     ],
-    "phpunit": "phpunit",
     "phpcs": "phpcs",
-    "phpstan": "phpstan analyse src --memory-limit=-1"
+    "phpstan": "phpstan analyse src --memory-limit=-1",
+    "phpunit": "phpunit"
   }
 }
