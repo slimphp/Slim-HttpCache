@@ -34,7 +34,7 @@ $app->add(new \Slim\HttpCache\Cache('public', 86400));
 // Create the cache provider.
 $cacheProvider = new \Slim\HttpCache\CacheProvider();
 
-// Register a route and pass the cache provider to the closure callback.
+// Register a route and let the closure callback inherit the cache provider.
 $app->get(
     '/',
     function (Request $request, Response $response, array $args) use ($cacheProvider): Response {
