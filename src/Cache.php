@@ -1,10 +1,28 @@
 <?php
+/**
+ * Slim Framework (https://www.slimframework.com)
+ *
+ * @license   https://github.com/slimphp/Slim-HttpCache/blob/master/LICENSE.md (MIT License)
+ */
+
+declare(strict_types=1);
+
 namespace Slim\HttpCache;
 
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class Cache
+use function in_array;
+use function is_array;
+use function is_numeric;
+use function preg_split;
+use function reset;
+use function sprintf;
+use function strtotime;
+
+class Cache implements MiddlewareInterface
 {
     /**
      * Cache-Control type (public or private)
@@ -34,7 +52,7 @@ class Cache
      * @param int    $maxAge         The maximum age of client-side cache
      * @param bool   $mustRevalidate must-revalidate
      */
-    public function __construct($type = 'private', $maxAge = 86400, $mustRevalidate = false)
+    public function __construct(string $type = 'private', int $maxAge = 86400, bool $mustRevalidate = false)
     {
         $this->type = $type;
         $this->maxAge = $maxAge;
@@ -42,35 +60,36 @@ class Cache
     }
 
     /**
-     * Invoke cache middleware
-     *
-     * @param  RequestInterface  $request  A PSR7 request object
-     * @param  ResponseInterface $response A PSR7 response object
-     * @param  callable          $next     The next middleware callable
-     *
-     * @return ResponseInterface           A PSR7 response object
+     * {@inheritDoc}
      */
-    public function __invoke(RequestInterface $request, ResponseInterface $response, callable $next)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $next($request, $response);
+        $response = $handler->handle($request);
 
         // Cache-Control header
         if (!$response->hasHeader('Cache-Control')) {
             if ($this->maxAge === 0) {
-                $response = $response->withHeader('Cache-Control', sprintf(
-                    '%s, no-cache%s',
-                    $this->type,
-                    $this->mustRevalidate ? ', must-revalidate' : ''
-                ));
+                $response = $response->withHeader(
+                    'Cache-Control',
+                    sprintf(
+                        '%s, no-cache%s',
+                        $this->type,
+                        $this->mustRevalidate ? ', must-revalidate' : ''
+                    )
+                );
             } else {
-                $response = $response->withHeader('Cache-Control', sprintf(
-                    '%s, max-age=%s%s',
-                    $this->type,
-                    $this->maxAge,
-                    $this->mustRevalidate ? ', must-revalidate' : ''
-                ));
+                $response = $response->withHeader(
+                    'Cache-Control',
+                    sprintf(
+                        '%s, max-age=%s%s',
+                        $this->type,
+                        $this->maxAge,
+                        $this->mustRevalidate ? ', must-revalidate' : ''
+                    )
+                );
             }
         }
+
 
         // ETag header and conditional GET check
         $etag = $response->getHeader('ETag');
@@ -81,7 +100,7 @@ class Cache
 
             if ($ifNoneMatch) {
                 $etagList = preg_split('@\s*,\s*@', $ifNoneMatch);
-                if (in_array($etag, $etagList) || in_array('*', $etagList)) {
+                if (is_array($etagList) && (in_array($etag, $etagList) || in_array('*', $etagList))) {
                     return $response->withStatus(304);
                 }
             }
@@ -92,7 +111,7 @@ class Cache
         $lastModified = $response->getHeaderLine('Last-Modified');
 
         if ($lastModified) {
-            if (!is_integer($lastModified)) {
+            if (!is_numeric($lastModified)) {
                 $lastModified = strtotime($lastModified);
             }
 

@@ -1,6 +1,8 @@
 # Slim Framework HTTP Cache
 
 [![Build Status](https://travis-ci.org/slimphp/Slim-HttpCache.svg?branch=master)](https://travis-ci.org/slimphp/Slim-HttpCache)
+[![Latest Stable Version](https://poser.pugx.org/slim/http-cache/v)](//packagist.org/packages/slim/http-cache)
+[![License](https://poser.pugx.org/slim/http-cache/license)](https://packagist.org/packages/slim/http-cache)
 
 This repository contains a Slim Framework HTTP cache middleware and service provider.
 
@@ -12,30 +14,38 @@ Via Composer
 $ composer require slim/http-cache
 ```
 
-Requires Slim 3.0.0 or newer.
+Requires Slim 4.0.0 or newer.
 
 ## Usage
 
 ```php
-$app = new \Slim\App();
+declare(strict_types=1);
 
-// Register middleware
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
+require __DIR__.'/../vendor/autoload.php';
+
+$app = \Slim\Factory\AppFactory::create();
+
+// Register the http cache middleware.
 $app->add(new \Slim\HttpCache\Cache('public', 86400));
 
-// Fetch DI Container
-$container = $app->getContainer();
+// Create the cache provider.
+$cacheProvider = new \Slim\HttpCache\CacheProvider();
 
-// Register service provider
-$container['cache'] = function () {
-    return new \Slim\HttpCache\CacheProvider();
-};
+// Register a route and let the closure callback inherit the cache provider.
+$app->get(
+    '/',
+    function (Request $request, Response $response, array $args) use ($cacheProvider): Response {
+        // Use the cache provider.
+        $response = $cacheProvider->withEtag($response, 'abc');
 
-// Example route with ETag header
-$app->get('/foo', function ($req, $res, $args) {
-    $resWithEtag = $this->cache->withEtag($res, 'abc');
+        $response->getBody()->write('Hello world!');
 
-    return $resWithEtag;
-});
+        return $response;
+    }
+);
 
 $app->run();
 ```
