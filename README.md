@@ -1,6 +1,7 @@
 # Slim Framework HTTP Cache
 
-[![Build Status](https://travis-ci.org/slimphp/Slim-HttpCache.svg?branch=master)](https://travis-ci.org/slimphp/Slim-HttpCache)
+[![Build Status](https://travis-ci.com/slimphp/Slim-HttpCache.svg?branch=1.x)](https://travis-ci.com/slimphp/Slim-HttpCache)
+[![Coverage Status](https://coveralls.io/repos/github/slimphp/Slim-HttpCache/badge.svg?branch=1.x)](https://coveralls.io/github/slimphp/Slim-HttpCache?branch=1.x)
 [![Latest Stable Version](https://poser.pugx.org/slim/http-cache/v)](//packagist.org/packages/slim/http-cache)
 [![License](https://poser.pugx.org/slim/http-cache/license)](https://packagist.org/packages/slim/http-cache)
 
