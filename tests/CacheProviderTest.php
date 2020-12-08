@@ -2,7 +2,7 @@
 /**
  * Slim Framework (https://www.slimframework.com)
  *
- * @license   https://github.com/slimphp/Slim-HttpCache/blob/master/LICENSE.md (MIT License)
+ * @license https://github.com/slimphp/Slim-HttpCache/blob/master/LICENSE.md (MIT License)
  */
 
 declare(strict_types=1);
@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Slim\HttpCache\Tests;
 
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Slim\HttpCache\CacheProvider;
 use Slim\Psr7\Factory\ResponseFactory;
