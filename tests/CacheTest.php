@@ -2,14 +2,13 @@
 /**
  * Slim Framework (https://www.slimframework.com)
  *
- * @license   https://github.com/slimphp/Slim-HttpCache/blob/master/LICENSE.md (MIT License)
+ * @license https://github.com/slimphp/Slim-HttpCache/blob/master/LICENSE.md (MIT License)
  */
 
 declare(strict_types=1);
 
 namespace Slim\HttpCache\Tests;
 
-use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
