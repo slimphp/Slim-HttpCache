@@ -1,8 +1,8 @@
 # Slim Framework HTTP Cache
 
-[![Build Status](https://travis-ci.com/slimphp/Slim-HttpCache.svg?branch=1.x)](https://travis-ci.com/slimphp/Slim-HttpCache)
+[![Build Status](https://github.com/slimphp/Slim-HttpCache/actions/workflows/tests.yml/badge.svg?branch=1.x)](https://github.com/slimphp/Slim-HttpCache/actions)
 [![Coverage Status](https://coveralls.io/repos/github/slimphp/Slim-HttpCache/badge.svg?branch=1.x)](https://coveralls.io/github/slimphp/Slim-HttpCache?branch=1.x)
-[![Latest Stable Version](https://poser.pugx.org/slim/http-cache/v)](//packagist.org/packages/slim/http-cache)
+[![Latest Stable Version](https://poser.pugx.org/slim/http-cache/v)](https://packagist.org/packages/slim/http-cache)
 [![License](https://poser.pugx.org/slim/http-cache/license)](https://packagist.org/packages/slim/http-cache)
 
 This repository contains a Slim Framework HTTP cache middleware and service provider.
@@ -11,7 +11,7 @@ This repository contains a Slim Framework HTTP cache middleware and service prov
 
 Via Composer
 
-``` bash
+```bash
 $ composer require slim/http-cache
 ```
 
