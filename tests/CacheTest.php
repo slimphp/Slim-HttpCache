@@ -43,7 +43,7 @@ class CacheTest extends TestCase
      *
      * @return RequestHandlerInterface
      */
-    protected function createRequestHandler(ResponseInterface $response = null): RequestHandlerInterface
+    protected function createRequestHandler(?ResponseInterface $response): RequestHandlerInterface
     {
         $response = $response ?? $this->createResponse();
 
@@ -67,7 +67,7 @@ class CacheTest extends TestCase
         $cache = new Cache('public', 86400);
         $req = $this->requestFactory();
 
-        $res = $cache->process($req, $this->createRequestHandler());
+        $res = $cache->process($req, $this->createRequestHandler(null));
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -79,7 +79,7 @@ class CacheTest extends TestCase
         $cache = new Cache('private', 86400, true);
         $req = $this->requestFactory();
 
-        $res = $cache->process($req, $this->createRequestHandler());
+        $res = $cache->process($req, $this->createRequestHandler(null));
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
@@ -91,7 +91,7 @@ class CacheTest extends TestCase
         $cache = new Cache('private', 0, false);
         $req = $this->requestFactory();
 
-        $res = $cache->process($req, $this->createRequestHandler());
+        $res = $cache->process($req, $this->createRequestHandler(null));
 
         $cacheControl = $res->getHeaderLine('Cache-Control');
 
