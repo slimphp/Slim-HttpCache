@@ -22,12 +22,6 @@ use function time;
 
 class CacheTest extends TestCase
 {
-    private function createCache(string $type, int $maxAge, bool $mustRevalidate, bool $withStreamFactory): Cache
-    {
-        $streamFactory = $withStreamFactory ? new StreamFactory() : null;
-        return new Cache($type, $maxAge, $mustRevalidate, $streamFactory);
-    }
-
     public function requestFactory(): ServerRequestInterface
     {
         $serverRequestFactory = new ServerRequestFactory();
@@ -234,5 +228,11 @@ class CacheTest extends TestCase
 
         self::assertEquals(304, $res->getStatusCode());
         self::assertSame('', (string) $res->getBody());
+    }
+
+    private function createCache(string $type, int $maxAge, bool $mustRevalidate, bool $withStreamFactory): Cache
+    {
+        $streamFactory = $withStreamFactory ? new StreamFactory() : null;
+        return new Cache($type, $maxAge, $mustRevalidate, $streamFactory);
     }
 }
