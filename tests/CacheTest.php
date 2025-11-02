@@ -15,8 +15,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\HttpCache\Cache;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
-
 use Slim\Psr7\Factory\StreamFactory;
+
 use function gmdate;
 use function time;
 
