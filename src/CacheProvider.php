@@ -15,7 +15,6 @@ use Psr\Http\Message\ResponseInterface;
 use function gmdate;
 use function in_array;
 use function is_integer;
-use function is_null;
 use function strtotime;
 use function time;
 
@@ -43,7 +42,7 @@ class CacheProvider
         }
         $headerValue = $type;
         if ($maxAge || is_integer($maxAge)) {
-            if (!is_integer($maxAge) && !is_null($maxAge)) {
+            if (!is_integer($maxAge) && $maxAge !== null) {
                 $maxAge = strtotime($maxAge) - time();
             }
             $headerValue = $headerValue.', max-age='.$maxAge;
