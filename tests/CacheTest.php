@@ -22,11 +22,11 @@ use function time;
 
 class CacheTest extends TestCase
 {
-    private function createCache(string $type = 'privte', int $maxAge = 86400, bool $mustRevalidate = false): Cache
+    private function createCache(string $type, int $maxAge, bool $mustRevalidate, bool $withStreamFactory): Cache
     {
-        return new Cache(new StreamFactory(), $type, $maxAge, $mustRevalidate);
+        $streamFactory = $withStreamFactory ? new StreamFactory() : null;
+        return new Cache($type, $maxAge, $mustRevalidate, $streamFactory);
     }
-
 
     public function requestFactory(): ServerRequestInterface
     {
@@ -71,7 +71,7 @@ class CacheTest extends TestCase
 
     public function testCacheControlHeader()
     {
-        $cache = $this->createCache('public', 86400);
+        $cache = $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory();
 
         $res = $cache->process($req, $this->createRequestHandler(null));
@@ -83,7 +83,7 @@ class CacheTest extends TestCase
 
     public function testCacheControlHeaderWithMustRevalidate()
     {
-        $cache = $this->createCache('private', 86400, true);
+        $cache = $this->createCache('private', 86400, true, false);
         $req = $this->requestFactory();
 
         $res = $cache->process($req, $this->createRequestHandler(null));
@@ -95,7 +95,7 @@ class CacheTest extends TestCase
 
     public function testCacheControlHeaderWithZeroMaxAge()
     {
-        $cache = $this->createCache('private', 0, false);
+        $cache = $this->createCache('private', 0, false, false);
         $req = $this->requestFactory();
 
         $res = $cache->process($req, $this->createRequestHandler(null));
@@ -107,7 +107,7 @@ class CacheTest extends TestCase
 
     public function testCacheControlHeaderDoesNotOverrideExistingHeader()
     {
-        $cache =  $this->createCache('public', 86400);
+        $cache =  $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory();
 
         $res = $this->createResponse()->withHeader('Cache-Control', 'no-cache,no-store');
@@ -123,14 +123,16 @@ class CacheTest extends TestCase
         $now = time();
         $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 86400);
-        $cache =  $this->createCache('public', 86400);
+        $cache =  $this->createCache('public', 86400, false, false);
 
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
 
         $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
+        $res->getBody()->write('payload data');
         $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(304, $res->getStatusCode());
+        self::assertSame('payload data', (string) $res->getBody());
     }
 
     public function testLastModifiedWithCacheHitAndNewerDate()
@@ -138,7 +140,7 @@ class CacheTest extends TestCase
         $now = time();
         $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now + 172800); // <-- Newer date
-        $cache = $this->createCache('public', 86400);
+        $cache = $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
 
         $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
@@ -152,7 +154,7 @@ class CacheTest extends TestCase
         $now = time();
         $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now); // <-- Older date
-        $cache =  $this->createCache('public', 86400);
+        $cache =  $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
 
         $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
@@ -166,7 +168,7 @@ class CacheTest extends TestCase
         $now = time();
         $lastModified = gmdate('D, d M Y H:i:s T', $now + 86400);
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now - 86400);
-        $cache = $this->createCache('public', 86400);
+        $cache = $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
 
         $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
@@ -179,20 +181,22 @@ class CacheTest extends TestCase
     {
         $etag = 'abc';
         $ifNoneMatch = 'abc';
-        $cache =  $this->createCache('public', 86400);
+        $cache =  $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory()->withHeader('If-None-Match', $ifNoneMatch);
 
         $res = $this->createResponse()->withHeader('Etag', $etag);
+        $res->getBody()->write('payload data');
         $res = $cache->process($req, $this->createRequestHandler($res));
 
         $this->assertEquals(304, $res->getStatusCode());
+        self::assertSame('payload data', (string) $res->getBody());
     }
 
     public function testETagWithCacheMiss()
     {
         $etag = 'abc';
         $ifNoneMatch = 'xyz';
-        $cache =  $this->createCache('public', 86400);
+        $cache =  $this->createCache('public', 86400, false, false);
         $req = $this->requestFactory()->withHeader('If-None-Match', $ifNoneMatch);
 
         $res = $this->createResponse()->withHeader('Etag', $etag);
@@ -201,10 +205,10 @@ class CacheTest extends TestCase
         $this->assertEquals(200, $res->getStatusCode());
     }
 
-    public function testETagReturnsNoBodyOnCacheHit(): void
+    public function testETagReturnsNoBodyOnCacheHitWhenAStreamFactoryIsProvided(): void
     {
         $etag = 'abc';
-        $cache =  $this->createCache();
+        $cache =  $this->createCache('private', 86400, false, true);
         $req = $this->requestFactory()->withHeader('If-None-Match', $etag);
 
         $res = $this->createResponse()->withHeader('Etag', $etag);
@@ -215,12 +219,12 @@ class CacheTest extends TestCase
         self::assertSame('', (string) $res->getBody());
     }
 
-    public function testLastModifiedReturnsNoBodyOnCacheHit(): void
+    public function testLastModifiedReturnsNoBodyOnCacheHitWhenAStreamFactoryIsProvided(): void
     {
         $now = time() + 86400;
         $lastModified = gmdate('D, d M Y H:i:s T', $now);
         $ifModifiedSince = gmdate('D, d M Y H:i:s T', $now);
-        $cache = $this->createCache();
+        $cache = $this->createCache('private', 86400, false, true);
 
         $req = $this->requestFactory()->withHeader('If-Modified-Since', $ifModifiedSince);
         $res = $this->createResponse()->withHeader('Last-Modified', $lastModified);
