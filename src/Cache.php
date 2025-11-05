@@ -11,6 +11,7 @@ namespace Slim\HttpCache;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -46,17 +47,28 @@ class Cache implements MiddlewareInterface
     protected $mustRevalidate;
 
     /**
+     * @var StreamFactoryInterface|null
+     */
+    protected $streamFactory;
+
+    /**
      * Create new HTTP cache
      *
-     * @param string $type           The cache type: "public" or "private"
-     * @param int    $maxAge         The maximum age of client-side cache
-     * @param bool   $mustRevalidate must-revalidate
+     * @param string $type                                 The cache type: "public" or "private"
+     * @param int    $maxAge                               The maximum age of client-side cache
+     * @param bool   $mustRevalidate                       must-revalidate
+     * @param StreamFactoryInterface|null   $streamFactory Will clear body of a 304 if provided
      */
-    public function __construct(string $type = 'private', int $maxAge = 86400, bool $mustRevalidate = false)
-    {
+    public function __construct(
+        string $type = 'private',
+        int $maxAge = 86400,
+        bool $mustRevalidate = false,
+        ?StreamFactoryInterface $streamFactory = null
+    ) {
         $this->type = $type;
         $this->maxAge = $maxAge;
         $this->mustRevalidate = $mustRevalidate;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -101,7 +113,11 @@ class Cache implements MiddlewareInterface
             if ($ifNoneMatch) {
                 $etagList = preg_split('@\s*,\s*@', $ifNoneMatch);
                 if (is_array($etagList) && (in_array($etag, $etagList) || in_array('*', $etagList))) {
-                    return $response->withStatus(304);
+                    $response = $response->withStatus(304);
+                    if ($this->streamFactory) {
+                        $response = $response->withBody($this->streamFactory->createStream(''));
+                    }
+                    return $response;
                 }
             }
         }
@@ -118,7 +134,11 @@ class Cache implements MiddlewareInterface
             $ifModifiedSince = $request->getHeaderLine('If-Modified-Since');
 
             if ($ifModifiedSince && $lastModified <= strtotime($ifModifiedSince)) {
-                return $response->withStatus(304);
+                $response = $response->withStatus(304);
+                if ($this->streamFactory) {
+                    $response = $response->withBody($this->streamFactory->createStream(''));
+                }
+                return $response;
             }
         }
 
